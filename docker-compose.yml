@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_PATH=/app/data/dealdekho.db
+      - SCRAPE_MODE=playwright
+      - SCRAPE_CRON=0 */6 * * *
+      - SCRAPE_DELAY_MS=3000
+      - SCRAPE_CONCURRENCY=2
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:80
+    volumes:
+      - db_data:/app/data
+      - logs:/app/logs
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:3001/api
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  logs:
